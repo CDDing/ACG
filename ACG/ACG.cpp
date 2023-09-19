@@ -169,8 +169,8 @@ void renderScene(void)
 {
     //Clear all pixels
     glClear(GL_COLOR_BUFFER_BIT);
-    //Let's draw something here
-
+    //Let's draw something heres
+    
     glUniform1i(glGetUniformLocation(ProgramID, "tess"), tessellation);
     //define the size of point and draw a point.
     //glDrawArrays(GL_POINTS, 0, 1);
