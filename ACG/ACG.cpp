@@ -1,4 +1,5 @@
 ﻿#define _USE_MATH_DEFINES
+#define STB_IMAGE_IMPLEMENTATION
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,20 +10,24 @@
 #include <algorithm>
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include <stb_image.h>
 GLuint Buffers[5];
-GLuint ProgramID;
+GLuint ProgramID,currentProgram;
+GLuint programID, programID2, programID3, programID4,programID5;
+GLuint texture;
+int width, height;
 using namespace std;
 int tessellation = 10;
 int mouse_prev_x = 0, mouse_prev_y = 0;
 float mouse_dx[] = { 0.0f, 0.0f,0.0f, };
 float mouse_dy[] = { 0.0f, 0.0f,0.0f, };
 int cnt = 0;
-GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path, const char* geometry_file_path)
+unsigned char* image;
+GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path)
 {
     //create the shaders
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-    GLuint GeometryShaderID = glCreateShader(GL_GEOMETRY_SHADER);
     GLint Result = GL_FALSE;
     int InfoLogLength;
 
@@ -77,31 +82,6 @@ GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path,
         fprintf(stdout, "%s\n", &FragmentShaderErrorMessage[0]);
     }
 
-    string GeometryShaderCode;
-    ifstream GeometryShaderStream(geometry_file_path, ios::in);
-    if (GeometryShaderStream.is_open())
-    {
-        string Line = "";
-        while (getline(GeometryShaderStream, Line))
-            GeometryShaderCode += "\n" + Line;
-        GeometryShaderStream.close();
-    }
-
-    //Compile Fragment Shader
-    printf("Compiling shader : %s\n", geometry_file_path);
-    char const* GeometrySourcePointer = GeometryShaderCode.c_str();
-    glShaderSource(GeometryShaderID, 1, &GeometrySourcePointer, NULL);
-    glCompileShader(GeometryShaderID);
-
-    //Check Fragment Shader
-    glGetShaderiv(GeometryShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(GeometryShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength != 0) {
-        vector<char> GeometryShaderErrorMessage(InfoLogLength);
-        glGetShaderInfoLog(GeometryShaderID, InfoLogLength, NULL, &GeometryShaderErrorMessage[0]);
-        fprintf(stdout, "%s\n", &GeometryShaderErrorMessage[0]);
-    }
-
 
 
 
@@ -110,25 +90,54 @@ GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path,
     ProgramID = glCreateProgram();
     glAttachShader(ProgramID, VertexShaderID);
     glAttachShader(ProgramID, FragmentShaderID);
-    glAttachShader(ProgramID, GeometryShaderID);
     glLinkProgram(ProgramID);
 
-    GLfloat vertices[] = {
-       -0.5f,-0.5f,0.0f,
-       -0.5f,0.5f,0.0f,
-       0.5f,0.5f,0.0f,
-       0.5f,-0.5f,0.0f,
-
+    float vertices[] = {
+        // positions          // colors           // texture coords
+         1.0f,  1.0f, 0.0f,      1.0f, 1.0f, // top right
+         1.0f, -1.0f, 0.0f,     1.0f, 0.0f, // bottom right
+        -1.0f, -1.0f, 0.0f,     0.0f, 0.0f, // bottom left
+        -1.0f,  1.0f, 0.0f,     0.0f, 1.0f  // top left 
     };
-    GLuint positionAttribute = glGetAttribLocation(ProgramID, "vtxPosition");
+    unsigned int indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+    unsigned int VBO, EBO;
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-    glGenBuffers(3, Buffers);
-    glBindBuffer(GL_ARRAY_BUFFER, Buffers[0]);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    GLuint positionAttribute = glGetAttribLocation(ProgramID, "vtxPosition");
+    GLuint textureAttribute = glGetAttribLocation(ProgramID, "Texcoords");
+    // position attribute
+    glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(positionAttribute);
+    // color attribute
+    // texture coord attribute
+    glVertexAttribPointer(textureAttribute, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(textureAttribute);
 
 
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load image, create texture and generate mipmaps
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+    unsigned char* data = stbi_load("image.jpg", &width, &height, &nrChannels, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    
     // Check the program
     glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
     glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
@@ -138,7 +147,6 @@ GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path,
 
     glDeleteShader(VertexShaderID);
     glDeleteShader(FragmentShaderID);
-    glDeleteShader(GeometryShaderID);
 
     return ProgramID;
 }
@@ -167,14 +175,19 @@ void myMouseWheel(int button, int dir, int x, int y) {
 
 void renderScene(void)
 {
-    //Clear all pixels
+    // render
+    // ------
+    glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    //Let's draw something heres
-    
-    glUniform1i(glGetUniformLocation(ProgramID, "tess"), tessellation);
+
+    // bind textures on corresponding texture units
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
     //define the size of point and draw a point.
-    //glDrawArrays(GL_POINTS, 0, 1);
-    glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
+    glDrawArrays(GL_QUADS,0,4);
+    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     //Double buffer
     glutSwapBuffers();
 }
@@ -197,10 +210,33 @@ void init()
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
 }
-
+void myKeyboard(unsigned char i, int x, int y) {
+    cout << i << endl;
+    if (i == '1') {
+        currentProgram = programID;
+    }
+    else if (i == '2') {
+        currentProgram = programID2;
+    }
+    else if (i == '3') {
+        currentProgram = programID3;
+    }
+    else if (i == '4') {
+        currentProgram = programID4;
+    }
+    else if (i == '5') {
+        currentProgram = programID5;
+    }
+    glUseProgram(currentProgram);
+    glutPostRedisplay();
+}
 
 int main(int argc, char** argv)
 {
+    auto n = 3;
+    image= stbi_load("image.jpg", &width, &height, &n, 0);
+
+
     //init GLUT and create Window
     //initialize the GLUT
     glutInit(&argc, argv);
@@ -210,7 +246,7 @@ int main(int argc, char** argv)
 
     //These two functions are used to define the position and size of the window. 
     glutInitWindowPosition(200, 200);
-    glutInitWindowSize(480, 480);
+    glutInitWindowSize(width, height);
     //This is used to define the name of the window.
     glutCreateWindow("Simple OpenGL Window");
 
@@ -224,15 +260,18 @@ int main(int argc, char** argv)
     glBindVertexArray(VertexArrayID);
 
     //3. 
-    GLuint programID = LoadShaders("VertexShader.txt", "FragmentShader.txt", "GeometryShader.txt");
-    glUseProgram(programID);
+    programID = LoadShaders("VertexShader.txt", "FragmentShader.txt");
+    programID2 = LoadShaders("VertexShader.txt", "FragmentShader_Negative.txt");
+    programID3 = LoadShaders("VertexShader.txt", "FragmentShader_GaussianBlur.txt");
+    programID4 = LoadShaders("VertexShader.txt", "FragmentShader_EdgeDetection.txt");
+    programID5 = LoadShaders("VertexShader.txt", "FragmentShader_ToonRendering.txt");
 
+    glUseProgram(programID);
     glutDisplayFunc(renderScene);
 
+    glutKeyboardFunc(myKeyboard);
     glutMotionFunc(myMouseDrag);
     glutMouseFunc(myMouseWheel);
-    //glutTimerFunc(10, doTimer, 1);
-    //enter GLUT event processing cycle
     glutMainLoop();
     glDeleteVertexArrays(1, &VertexArrayID);
 

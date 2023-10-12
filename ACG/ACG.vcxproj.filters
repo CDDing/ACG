@@ -26,7 +26,16 @@
     <Text Include="VertexShader.txt">
       <Filter>소스 파일</Filter>
     </Text>
-    <Text Include="GeometryShader.txt">
+    <Text Include="FragmentShader_GaussianBlur.txt">
+      <Filter>소스 파일</Filter>
+    </Text>
+    <Text Include="FragmentShader_Negative.txt">
+      <Filter>소스 파일</Filter>
+    </Text>
+    <Text Include="FragmentShader_EdgeDetection.txt">
+      <Filter>소스 파일</Filter>
+    </Text>
+    <Text Include="FragmentShader_ToonRendering.txt">
       <Filter>소스 파일</Filter>
     </Text>
   </ItemGroup>

@@ -1,0 +1,18 @@
+#version 400 core
+uniform sampler2D u_Image;
+in vec2 fs_Texcoords;
+out vec4 FragColor;
+
+void main()
+{
+	vec4 c0=textureOffset(u_Image,fs_Texcoords,ivec2(-1,-1));
+	vec4 c1 = textureOffset(u_Image,fs_Texcoords,ivec2(-1,0));
+	vec4 c2 = textureOffset(u_Image,fs_Texcoords,ivec2(-1,1));
+	vec4 c3 = textureOffset(u_Image,fs_Texcoords,ivec2(0,-1));
+	vec4 c4 = texture(u_Image,fs_Texcoords);
+	vec4 c5 = textureOffset(u_Image,fs_Texcoords,ivec2(0,1));
+	vec4 c6 = textureOffset(u_Image,fs_Texcoords,ivec2(1,-1));
+	vec4 c7 = textureOffset(u_Image,fs_Texcoords,ivec2(1,0));
+	vec4 c8 = textureOffset(u_Image,fs_Texcoords,ivec2(1,1));
+	FragColor = (c0+c1*2+c2+c3*2+c4*4 + c5*2 + c6+c7*2+c8)*0.0625;
+}

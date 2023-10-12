@@ -136,7 +136,10 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="FragmentShader.txt" />
-    <Text Include="GeometryShader.txt" />
+    <Text Include="FragmentShader_EdgeDetection.txt" />
+    <Text Include="FragmentShader_GaussianBlur.txt" />
+    <Text Include="FragmentShader_Negative.txt" />
+    <Text Include="FragmentShader_ToonRendering.txt" />
     <Text Include="VertexShader.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

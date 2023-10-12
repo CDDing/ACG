@@ -1,0 +1,24 @@
+#version 400 core
+uniform sampler2D u_Image;
+in vec2 fs_Texcoords;
+out vec4 FragColor;
+
+void main()
+{
+	vec4 c1 = textureOffset(u_Image,fs_Texcoords,ivec2(-1,0));
+	vec4 c3 = textureOffset(u_Image,fs_Texcoords,ivec2(0,-1));
+	vec4 c4 = texture(u_Image,fs_Texcoords);
+	vec4 c5 = textureOffset(u_Image,fs_Texcoords,ivec2(0,1));
+	vec4 c7 = textureOffset(u_Image,fs_Texcoords,ivec2(1,0));
+
+
+	vec4 diff = (abs(c4 - c1)+abs(c4 - c1)+abs(c4 - c7)+abs(c4 - c5))*0.25;
+
+	vec4 color;
+	if(length(diff) < 0.2){
+		color = vec4(0.0,0.0,0.0,0.0);
+	}else{
+		color = vec4(1.0,1.0,1.0,0.0);
+	}
+	FragColor = color;
+}
