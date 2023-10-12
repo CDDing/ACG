@@ -3,17 +3,17 @@
 
 # Assignment 1
 - Generate Bezier Curve with Geometry Shader
-![Tessellation10](./result/Tessellation 10.png)
-![Tessellation100](./result/Tessellation 100.png)
+![Tessellation10](./result/Tessellation10.png)
+![Tessellation100](./result/Tessellation100.png)
 # Assignment 2
-- Image Processing
-## Original Image
+Image Processing
+- Original Image
 ![Origin](./result/Origin.png)
-## EdgeDetection
+- EdgeDetection
 ![EdgeDetection](./result/EdgeDetection.png)
-## Negative
+- Negative
 ![Negative](./result/Negative.png)
-## ToonRendering
+- ToonRendering
 ![ToonRendering](./result/ToonRendering.png)
-## Gaussian Blur
-![GaussianBlur](./result/Gaussian Blur.png)
+- Gaussian Blur
+![GaussianBlur](./result/GaussianBlur.png)
