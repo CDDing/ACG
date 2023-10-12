@@ -3,8 +3,8 @@
 
 # Assignment 1
 - Generate Bezier Curve with Geometry Shader
-![Tessellation10](./result/Tessellation10.png)
-![Tessellation100](./result/Tessellation100.png)
+![Tessellation 10](./result/Tessellation 10.png)
+![Tessellation 100](./result/Tessellation 100.png)
 # Assignment 2
 - Image Processing
 ![Origin](./result/Origin.png)
